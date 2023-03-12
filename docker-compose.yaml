@@ -1,0 +1,39 @@
+version: '3'
+services:
+  database:
+    image: mysql:latest
+    container_name: database
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: docker
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: docker
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./mysql/sql:/docker-entrypoint-initdb.dports
+    ports:
+      - '3306:3306'
+  php-apache:
+    container_name: php-apache
+    build:
+      context: ./backend
+    ports:
+        - '8080:80'
+    volumes:
+      - ./backend/src:/var/www/laravel_board
+      - ./apache/default.conf:/etc/apache2/sites-enabled/000-default.conf
+    depends_on:
+      - database
+  react:
+    build: ./frontend
+    tty: true
+    depends_on:
+      - php-apache
+    volumes:
+        - ./frontend:/usr/src/app
+    ports:
+        - 5173:5173
+volumes:
+  node_modules:
